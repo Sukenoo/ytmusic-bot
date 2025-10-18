@@ -15,8 +15,11 @@ def start(message):
 @bot.message_handler(func=lambda message: True)
 def download_music(message):
     query = message.text.strip()
-
     bot.reply_to(message, "⏳ Downloading your song... please wait!")
+
+    # Ensure cache folder exists
+    cache_dir = os.path.join(os.getcwd(), 'cache')
+    os.makedirs(cache_dir, exist_ok=True)
 
     ydl_opts = {
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
@@ -25,11 +28,12 @@ def download_music(message):
         'noplaylist': True,
         'default_search': 'ytsearch1',  # allows just song names
         'nocheckcertificate': True,
-        'cachedir': os.path.join(os.getcwd(), 'cache'),
+        'cachedir': cache_dir,
+        'cookiefile': 'cookies.txt',  # 👈 add this line
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
-            'preferredquality': '128',  # faster download
+            'preferredquality': '128',
         }],
         'extractor_args': {
             'youtube': {'player_client': ['android']},
@@ -43,13 +47,7 @@ def download_music(message):
             uploader = info.get('uploader', 'Unknown Artist')
             filename = f"{title}.mp3"
 
-        # Optional: choose static or dynamic caption
-        # 1️⃣ Static bot name version (recommended)
         caption = "🎧 Uploaded by @Sukenoo_yt_music_bot"
-
-        # 2️⃣ Dynamic user version (uncomment below if you prefer)
-        # user = message.from_user.username or message.from_user.first_name
-        # caption = f"🎧 Requested by @{user}" if message.from_user.username else f"🎧 Requested by {user}"
 
         with open(filename, 'rb') as audio:
             bot.send_audio(
